@@ -1,0 +1,18 @@
+1. Check ability of network on non-anime, 64x64 dataset
+ - build sample 64x64 dataset with simple task (signs, common objects, etc.)
+ - construct network according to book specifications
+ - train, test
+ - finetune network hyper-paramaters
+
+~~If 1 produces strong result
+2. Check ability of network on larger input images
+ - Restructure network for larger input size
+ - Train, Test with enlarged images or new dataset
+ - Repeat until network can handle acceptable resolution
+ - maybe consider minor post-generation upsampling
+
+3. Curate datasets for abstract ideas
+ - Find solution for aspect ratio problem
+ - Find dataset/scraping method for high resolution art
+	 - Consider dataset broadness/generalizability
+ - Train, Test, Finetune
