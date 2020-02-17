@@ -24,10 +24,11 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import MaxPooling2D
 from keras.optimizers import Adam, SGD
 from keras.preprocessing import image
-from scipy.misc import imread, imsave
+#from scipy.misc import imread, imsave
+import cv2 as cv
 from scipy.stats import entropy
 
-K.set_image_dim_ordering('tf')
+K.set_image_data_format('channels_last')
 
 np.random.seed(1337)
 
@@ -280,7 +281,6 @@ def save_rgb_img(img, path):
     plt.savefig(path)
     plt.close()
 
-
 def train():
     start_time = time.time()
     dataset_dir = "data/*.*"
@@ -300,7 +300,7 @@ def train():
     # Load images
     all_images = []
     for index, filename in enumerate(glob.glob(dataset_dir)):
-        all_images.append(imread(filename, flatten=False, mode='RGB'))
+        all_images.append(cv.imread(filename))#, flatten=False, mode='RGB'))
 
     X = np.array(all_images)
     X = (X - 127.5) / 127.5
@@ -316,8 +316,9 @@ def train():
     adversarial_model.compile(loss='binary_crossentropy', optimizer=gen_optimizer)
 
     tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()), write_images=True, write_grads=True, write_graph=True)
-    tensorboard.set_model(gen_model)
-    tensorboard.set_model(dis_model)
+    #tensorboard.set_model(gen_model)
+    #tensorboard.set_model(dis_model)
+    summary_writer = tf.summary.create_file_writer("logs/")
 
     for epoch in range(epochs):
         print("--------------------------")
@@ -373,7 +374,7 @@ def train():
         """
         Sample some images and save them
         """
-        if epoch % 100 == 0:
+        if epoch % 5 == 0:
             z_noise = np.random.normal(0, 1, size=(batch_size, z_shape))
             gen_images1 = gen_model.predict_on_batch(z_noise)
 
@@ -386,14 +387,18 @@ def train():
         """
         Save losses to Tensorboard after each epoch
         """
-        write_log(tensorboard, 'discriminator_loss', np.mean(dis_losses), epoch)
-        write_log(tensorboard, 'generator_loss', np.mean(gen_losses), epoch)
+        #write_log(tensorboard, 'discriminator_loss', np.mean(dis_losses), epoch)
+        #write_log(tensorboard, 'generator_loss', np.mean(gen_losses), epoch)
+        with summary_writer.as_default():
+            tf.summary.scalar('discrim_loss', np.mean(dis_losses), step=epoch)
+            tf.summary.scalar('gener_loss', np.mean(gen_losses), step=epoch)
+
 
     """
     Save models
     """
     gen_model.save("generator_model.h5")
-    dis_model.save("generator_model.h5")
+    dis_model.save("dis_model.h5")
 
     print("Time:", (time.time() - start_time))
 
